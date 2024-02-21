@@ -1,0 +1,16 @@
+
+# PROJECT
+builddir/*
+bin/*
+
+imgui.ini
+
+# DATA FILES
+data/*
+
+# VSCODE
+.vscode
+
+# MAC
+.DS_Store
+
