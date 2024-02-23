@@ -59,6 +59,7 @@ public:
             shader.use();
             shader.setMat4("o2w", cube.transform());
             shader.setMat4("w2c", P * V);
+            shader.setVec3("lightPosition", vec3(10.0, 10.0, 10.0));
             cube.render();
 
             // Rendering
@@ -98,6 +99,9 @@ private:
         glfwMakeContextCurrent( window );
         glfwSwapInterval( 1 );
         gladLoadGLLoader( (GLADloadproc) glfwGetProcAddress );
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
 
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();

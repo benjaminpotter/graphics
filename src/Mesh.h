@@ -21,8 +21,10 @@ public:
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(vertices[0]), vertices, GL_STATIC_DRAW);
         
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), 0);
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const void*) sizeof(vec3));
     }
     
     static Mesh fromWavefront(const char* file) {
@@ -89,12 +91,23 @@ public:
             else if(token == "f") {
 
                 // TODO handle more complex face syntax
+                // only handles f v//vn v//vn v//vn
                 // also requires parsing quads into triangles
+
                 for(int i = 0; i < 3; ++i) {
                     Vertex v;
-                    int vidx;
+
+                    int vidx, vnidx;
+                    char c;
+
                     fs >> vidx;
+                    fs >> c;
+                    fs >> c;
+                    fs >> vnidx;
+
                     v.position = vertices[vidx-1];
+                    v.normal = vertices[vnidx-1];
+
                     faces.push_back(v);
                 }
                 

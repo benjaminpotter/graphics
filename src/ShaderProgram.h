@@ -74,6 +74,10 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, GL_TRUE, &value[0][0]);
     }
 
+    void setVec3(const char *name, vec3 value) {
+        glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
+    }
+
 private:
 
     GLuint shaderProgram;
