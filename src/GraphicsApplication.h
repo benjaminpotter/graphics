@@ -21,7 +21,7 @@ public:
     void start() {
         setup();
 
-        ShaderProgram shader = ShaderProgram::fromFiles("data/shaders/vertex", "data/shaders/fragment");
+        ShaderProgram shader = ShaderProgram::fromFiles("data/shaders/vertex.vs", "data/shaders/fragment.fs");
         Mesh cube = Mesh::fromWavefront("data/objects/cube.obj");
         vec3 extent(1.0, 1.0, 1.0);
         double distance = 30.0;
@@ -55,12 +55,10 @@ public:
 
             mat4 P = perspective( 90.0*M_PI/180.0, width/(float)height, distance-10, distance+10);
             mat4 V = translate(0.0, 0.0, -distance);
-            mat4 M = cube.transform();
-
-            mat4 MVP = P * V * M;
 
             shader.use();
-            shader.setMat4("MVP", MVP);
+            shader.setMat4("o2w", cube.transform());
+            shader.setMat4("w2c", P * V);
             cube.render();
 
             // Rendering

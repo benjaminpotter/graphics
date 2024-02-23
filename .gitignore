@@ -6,7 +6,10 @@ bin/*
 imgui.ini
 
 # DATA FILES
-data/*
+
+# protected by copyright
+data/objects/cow.obj
+data/materials/cow.mtl
 
 # VSCODE
 .vscode
