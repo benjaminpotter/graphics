@@ -1,4 +1,6 @@
 
+#include <fstream>
+#include <sstream>
 
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
@@ -10,6 +12,8 @@
 #include "linalg.h"
 
 #include "Mesh.h"
+#include "ShaderProgram.h"
+
 
 class GraphicsApplication {
     
@@ -20,55 +24,8 @@ public:
     void start() {
         setup();
 
-        const char* vertexShaderText = 
-            "#version 330 \n"
-            "uniform mat4 MVP; \n"
-            "layout (location = 0) in vec3 vertexPosition; \n"
-            "out vec4 vertexColour; \n"
-            "void main() { \n"
-            "   gl_Position = MVP * vec4(vertexPosition, 1.0); \n"
-            "   vec3 normPos = normalize(vertexPosition); \n"
-            "   vertexColour = vec4(normPos, 1.0); \n"
-            "} \n";
-
-        const char* fragmentShaderText = 
-            "#version 330 \n"
-            "out mediump vec4 fragmentColour; \n"
-            "in vec4 vertexColour; \n"
-            "void main() { \n"
-            "   fragmentColour = vertexColour; \n"
-            "} \n";
-
-        // opengl 
-
-        GLuint vertexShader, fragmentShader;
-
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderText, NULL);
-        glCompileShader(vertexShader);
-
-        GLint success;
-        char log[512];
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-        if(!success) {
-            glGetShaderInfoLog(vertexShader, 512, NULL, log);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << log << std::endl;
-        }
-
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderText, NULL);
-        glCompileShader(fragmentShader);
-        
-        GLuint shaderProgram;
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);  
-
-        Mesh cube = Mesh::fromWavefront("data/cube.obj");
+        ShaderProgram shader = ShaderProgram::fromFiles("data/shaders/vertex", "data/shaders/fragment");
+        Mesh cube = Mesh::fromWavefront("data/objects/cube.obj");
         vec3 extent(1.0, 1.0, 1.0);
         double distance = 30.0;
         
@@ -99,14 +56,14 @@ public:
             cube.setExtent(extent);
             cube.rot(0.005, vec3(1.0, 1.0, 0.0));
 
-            mat4 P = perspective( 30.0*M_PI/180.0, width/(float)height, distance-2, distance+2 );
+            mat4 P = perspective( 90.0*M_PI/180.0, width/(float)height, distance-10, distance+10);
             mat4 V = translate(0.0, 0.0, -distance);
             mat4 M = cube.transform();
 
             mat4 MVP = P * V * M;
 
-            glUseProgram(shaderProgram);
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "MVP"), 1, GL_TRUE, &MVP[0][0]);
+            shader.use();
+            shader.setMat4("MVP", MVP);
             cube.render();
 
             // Rendering
@@ -115,9 +72,6 @@ public:
 
             glfwSwapBuffers(window);
         }
-
-
-        glDeleteProgram(shaderProgram);
 
         terminate();
     }
