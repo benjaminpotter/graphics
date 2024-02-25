@@ -23,8 +23,9 @@ public:
 
         ShaderProgram shader = ShaderProgram::fromFiles("data/shaders/vertex.vs", "data/shaders/fragment.fs");
         Mesh cube = Mesh::fromWavefront("data/objects/cube.obj");
+
         vec3 extent(1.0, 1.0, 1.0);
-        double distance = 30.0;
+        double distance = 12.0;
         
         while(!glfwWindowShouldClose(window)) { 
             glfwPollEvents();
