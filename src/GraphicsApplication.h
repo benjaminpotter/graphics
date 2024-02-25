@@ -22,9 +22,11 @@ public:
         setup();
 
         ShaderProgram shader = ShaderProgram::fromFiles("data/shaders/vertex.vs", "data/shaders/fragment.fs");
-        Mesh cube = Mesh::fromWavefront("data/objects/cube.obj");
+        // Mesh cube = Mesh::fromFile("data/objects/manatee_reduced_faces.obj");
+        // Mesh cube = Mesh::fromFile("data/objects/cube.obj");
+        Mesh cube = Mesh::fromFile("data/objects/cow.obj");
 
-        vec3 extent(1.0, 1.0, 1.0);
+        vec3 extent = vec3(1.0, 1.0, 1.0);
         double distance = 12.0;
         
         while(!glfwWindowShouldClose(window)) { 
@@ -60,7 +62,7 @@ public:
             shader.use();
             shader.setMat4("o2w", cube.transform());
             shader.setMat4("w2c", P * V);
-            shader.setVec3("lightPosition", vec3(10.0, 10.0, 10.0));
+            shader.setVec3("lightDirection", vec3(0.0, 0.0, -1.0));
             cube.render();
 
             // Rendering

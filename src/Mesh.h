@@ -2,6 +2,10 @@
 #include <fstream>
 #include "linalg.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 struct Vertex {
     vec3 position;
     vec3 normal;
@@ -12,110 +16,61 @@ class Mesh {
 
 public:
     Mesh(int count, Vertex vertices[]) : position(0.0, 0.0, 0.0), rotation(0.0, vec3(1.0, 0.0, 0.0)), extent(1.0, 1.0, 1.0) {
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
         GLuint VBO;
+
+        vertexCount = count;
+
+        // generate buffers
+        glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
+
+        // bind buffers
+        glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+        // store vertices on gpu
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(vertices[0]), vertices, GL_STATIC_DRAW);
         
+        // store information about position
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), 0);
 
+        // store information about normal
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (const void*) sizeof(vec3));
+
+        glBindVertexArray(0);
     }
     
-    static Mesh fromWavefront(const char* file) {
+    static Mesh fromFile(const char* file) {
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(file, aiProcess_Triangulate);
 
-        std::ifstream fs;
-        fs.open(file);
+        aiMesh *mesh = scene->mMeshes[0]; // ignore subsequent objects in scene
+        std::vector<Vertex> vertices;
 
-        if(!fs)
-            throw;
+        for(int i = 0; i < mesh->mNumFaces; ++i) {
+            aiFace face = mesh->mFaces[i];
+            if(face.mNumIndices != 3)
+                continue;
 
+            for(int j = 0; j < 3; ++j) {
+                Vertex v;
 
-        std::vector<vec3> vertices;
-        std::vector<vec3> normals;
-        std::vector<vec3> textures;
+                int idx = face.mIndices[j];
+                aiVector3D position = mesh->mVertices[idx]; 
+                aiVector3D normal = mesh->mNormals[idx]; 
 
-        std::vector<Vertex> faces;
-
-        while(fs.good()) {
-            std::string token;
-            fs >> token;
-
-            if(token == "Sphere")
-                break;
-
-            // read vertex
-            if(token == "v") {
-                
-                vec3 v(0, 0, 0);
-
-                fs >> v.x;
-                fs >> v.y;
-                fs >> v.z;
+                v.position = vec3(position.x, position.y, position.z);
+                v.normal = vec3(normal.x, normal.y, normal.z);
 
                 vertices.push_back(v);
-
-            }
-
-            // read normal
-            else if(token == "vn") {
-
-                vec3 n(0, 0, 0);
-
-                fs >> n.x;
-                fs >> n.y;
-                fs >> n.z;
-
-                normals.push_back(n);
-
-            }
-
-            // read texture co-ordinate
-            else if(token == "vt") {
-
-                vec3 t(0, 0, 0);
-
-                fs >> t.x;
-                fs >> t.y;
-
-                textures.push_back(t);
-                
-            }
-
-            // read face
-            else if(token == "f") {
-
-                // TODO handle more complex face syntax
-                // only handles f v//vn v//vn v//vn
-                // also requires parsing quads into triangles
-
-                for(int i = 0; i < 3; ++i) {
-                    Vertex v;
-
-                    int vidx, vnidx;
-                    char c;
-
-                    fs >> vidx;
-                    fs >> c;
-                    fs >> c;
-                    fs >> vnidx;
-
-                    v.position = vertices[vidx-1];
-                    v.normal = vertices[vnidx-1];
-
-                    faces.push_back(v);
-                }
-                
             }
         }
 
-        std::cout << "Loaded " << vertices.size() << " vertices and " << faces.size()/3 << " faces." << std::endl;
-        return Mesh(faces.size(), &faces[0]);
+        std::cout << "faces " << mesh->mNumFaces << "\n";
+        std::cout << "verts " << vertices.size() << std::endl;
+        return Mesh(vertices.size(), &vertices[0]);
     }
 
     void setExtent(vec3 extent) { this->extent = extent; }
@@ -130,7 +85,7 @@ public:
     void render() {
 
         glBindVertexArray( VAO );
-        glDrawArrays( GL_TRIANGLES, 0, 36 );
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
         glBindVertexArray( 0 );
 
     }
@@ -138,6 +93,7 @@ public:
 private:
 
     GLuint VAO;
+    int vertexCount;
 
     vec3 position;
     quaternion rotation;

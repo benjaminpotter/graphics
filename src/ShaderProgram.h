@@ -45,11 +45,8 @@ public:
     }
 
     static ShaderProgram fromFiles(const char *vertexPath, const char *fragmentPath) {
-
         std::ifstream vertex, fragment;
         std::stringstream vertexBuffer, fragmentBuffer;
-
-        std::cout << vertexPath << std::endl;
         
         vertex.open(vertexPath);
         if(!vertex)
